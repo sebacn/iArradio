@@ -1,6 +1,6 @@
 #include "eeprom_settings.hpp"
 
-EEPROMClass  iArradio_EEPROM("iArradio", EEPROM_SIZE);
+EEPROMClass  iArradio_EEPROM("iArradio");
 
 void eeprom_init()
 {

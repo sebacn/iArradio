@@ -46,11 +46,20 @@ void change_station(int8_t direction)
         station_index = 0;
     }
     audio.stopSong();
-    audio.connecttohost(stations[station_index].url);
-    station_text = String(LISTENING + ": " + stations[station_index].name);
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        audio.connecttohost(stations[station_index].url.c_str());
+        station_text = String(LISTENING + ": " + stations[station_index].name);        
+    }
+    else
+    {
+        station_text = String("No WiFi : " + stations[station_index].name); 
+    }
+
     xTaskCreate(task_stream_title, "TaskEpaperStation", 5000, &station_text, 1, NULL);
     xTaskCreate(task_epaper_station_number, "TaskEpaperStationNumber", 5000, &station_index, 1, NULL);
-    xTaskCreate(task_eeprom_station, "TaskEEPROMStation", 5000, &station_index, 1, NULL);
+    xTaskCreate(task_eeprom_station, "TaskEEPROMStation", 5000, &station_index, 1, NULL);   
 }
 
 void set_station(int8_t index)

@@ -1,6 +1,9 @@
 #include "user_input_buttons.hpp"
 #include "tasks.hpp"
 
+extern WiFiManager wifiManager;
+extern Settings settings;
+
 EasyButton home_button(HOME_BUTTON, DEBOUNCETIME);
 EasyButton prev_button(PREV_BUTTON, DEBOUNCETIME);
 EasyButton next_button(NEXT_BUTTON, DEBOUNCETIME);
@@ -57,6 +60,25 @@ void handle_home_timeout()
 
 void handle_home()
 {
+    if (wifiManager.getWebPortalActive())
+    {
+        wifiManager.stopWebPortal();
+
+        if (settings.ConfigOk)
+        {
+            //try to connect wifi
+            logo_screen("Try to connect WiFi..");
+        }
+
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            logo_screen("WiFi not connected, switch off..");
+            delay(3000);
+            power_off();
+        }
+        return;
+    }
+
     volume_mode = !volume_mode;
     xTaskCreate(task_epaper_cursor, "TaskEpaperCursor", 5000, &volume_mode, 1, NULL);
 }

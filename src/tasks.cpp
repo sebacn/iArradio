@@ -4,24 +4,33 @@ volatile bool updating = false;
 uint8_t old_capacity = 0;
 uint8_t old_rssi = 0;
 String old_stream_name = "";
+extern Settings settings;
 
 void set_updating(bool value)
 {
     updating = value;
 }
 
+/*
 void task_ntp(void *parameter)
 {
     for (;;)
     {
-        if (!updating)
+        if (WiFi.status() == WL_CONNECTED)
         {
-            updating = true;
-            ntp_update_rutine();
-            updating = false;
-            vTaskDelay(portTICK_PERIOD_MS * 1000);
+            if (!updating)
+            {
+                updating = true;
+                ntp_update_rutine();
+                updating = false;
+                vTaskDelay(portTICK_PERIOD_MS * 1000);
+            }
+            vTaskDelay(portTICK_PERIOD_MS * 15);
         }
-        vTaskDelay(portTICK_PERIOD_MS * 15);
+        else
+        {
+            vTaskDelay(portTICK_PERIOD_MS * 60000); //1min
+        }
     }
     vTaskDelete(NULL);
 }
@@ -30,17 +39,25 @@ void task_weather(void *parameter)
 {
     for (;;)
     {
-        if (!updating)
+        if (WiFi.status() == WL_CONNECTED)
         {
-            updating = true;
-            weather_update_rutine();
-            updating = false;
-            vTaskDelay(portTICK_PERIOD_MS * 500000);
+            if (!updating)
+            {
+                updating = true;
+                weather_update_rutine();
+                updating = false;
+                vTaskDelay(portTICK_PERIOD_MS * 500000);
+            }
+            vTaskDelay(portTICK_PERIOD_MS * 32);
         }
-        vTaskDelay(portTICK_PERIOD_MS * 32);
+        else
+        {
+            vTaskDelay(portTICK_PERIOD_MS * 60000); //1min
+        }
     }
     vTaskDelete(NULL);
 }
+
 
 void task_epaper_battery(void *parameter)
 {
@@ -59,6 +76,21 @@ void task_epaper_battery(void *parameter)
             vTaskDelay(portTICK_PERIOD_MS * 30500);
         }
         vTaskDelay(portTICK_PERIOD_MS * 24);
+    }
+    vTaskDelete(NULL);
+}
+*/
+void task_epaper_header(void *parameter)
+{
+    for (;;)
+    {
+        if (!updating)
+        {
+            updating = true;
+            epaper_draw_heading_section();
+            updating = false;
+        }
+        vTaskDelay(portTICK_PERIOD_MS * 30000); // 30 sec
     }
     vTaskDelete(NULL);
 }

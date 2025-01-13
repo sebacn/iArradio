@@ -6,6 +6,8 @@
 #include <Fonts/FreeSansBold24pt7b.h>
 #include "resources/weather-icons.hpp"
 #include "resources/fontello10pt7b.hpp"
+#include <U8g2_for_Adafruit_GFX.h>
+#include "settings.hpp"
 
 #define SPEAKER_ICON "0"
 #define SELECTED_ICON "1"
@@ -17,9 +19,64 @@
 #define WIFI_ICON_4 "6"
 #define WIFI_ICON_5 "5"
 
+extern Settings settings;
+
+//2.7″ E-Paper module 264*176 Pixels
 GxEPD2_BW<GxEPD2_270, GxEPD2_270::HEIGHT> display(GxEPD2_270(EPAPER_CS, EPAPER_DC, EPAPER_RST, EPAPER_BUSY));
 //GxEPD2_3C<GxEPD2_270c, GxEPD2_270c::HEIGHT> display(GxEPD2_270c(/*CS=*/5, /*DC=*/17, /*RST=*/16, /*BUSY=*/4));
 
+U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
+
+#define SCREEN_WIDTH   display.width()
+#define SCREEN_HEIGHT  display.height()
+
+enum alignmentType {LEFT, RIGHT, CENTER};
+
+extern String date_str;
+extern String time_str;
+
+void drawString(int x, int y, String text, alignmentType alignment) {
+  int16_t  x1, y1; //the bounds of x,y and w and h of the variable 'text' in pixels.
+  uint16_t w, h;
+  display.setTextWrap(false);
+  display.getTextBounds(text, x, y, &x1, &y1, &w, &h);
+  if (alignment == RIGHT)  x = x - w;
+  if (alignment == CENTER) x = x - w / 2;
+  u8g2Fonts.setCursor(x, y + h);
+  u8g2Fonts.print(text);
+}
+
+void DrawBattery(int x, int y) {
+  uint8_t percentage = 100;
+  float voltage = analogRead(35) / 4096.0 * 7.46;
+  if (voltage > 1 ) { // Only display if there is a valid reading
+    dbgPrintln("Voltage = " + String(voltage));
+    percentage = 2836.9625 * pow(voltage, 4) - 43987.4889 * pow(voltage, 3) + 255233.8134 * pow(voltage, 2) - 656689.7123 * voltage + 632041.7303;
+    if (voltage >= 4.20) percentage = 100;
+    if (voltage <= 3.50) percentage = 0;
+    display.drawRect(x + 15, y - 12, 19, 10, GxEPD_BLACK);
+    display.fillRect(x + 34, y - 10, 2, 5, GxEPD_BLACK);
+    display.fillRect(x + 17, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
+    drawString(x + 60, y - 11, String(percentage) + "%", RIGHT);
+    //drawString(x + 13, y + 5,  String(voltage, 2) + "v", CENTER);
+  }
+}
+
+void epaper_draw_heading_section() {
+
+  dbgPrintln("City: " + settings.City + ", date: " + date_str + ", time: " + time_str);
+
+  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  //display.drawRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,GxEPD_BLACK);
+  drawString(0, 15, settings.City, LEFT);
+  drawString(0, 1, time_str, LEFT);
+  drawString(SCREEN_WIDTH, 1, date_str, RIGHT);
+  display.drawLine(0, 11, SCREEN_WIDTH, 11, GxEPD_BLACK);
+
+  DrawBattery(55, 12);
+}
+
+/*
 void subrutine_time(String time)
 {
     display.setTextColor(GxEPD_BLACK);
@@ -59,7 +116,7 @@ void set_epaper_date(String date, String dayOfWeek)
     } while (display.nextPage());
     display.powerOff();
 }
-
+*/
 void subrutine_meteo(String temperature, char icon)
 {
     display.setTextColor(GxEPD_BLACK);
@@ -241,6 +298,13 @@ void init_display()
     display.setRotation(1);
     display.fillScreen(GxEPD_WHITE);
     display.refresh();
+
+    u8g2Fonts.begin(display);                  // connect u8g2 procedures to Adafruit GFX
+    u8g2Fonts.setFontMode(1);                  // use u8g2 transparent mode (this is default)
+    u8g2Fonts.setFontDirection(0);             // left to right (this is default)
+    u8g2Fonts.setForegroundColor(GxEPD_BLACK); // apply Adafruit GFX color
+    u8g2Fonts.setBackgroundColor(GxEPD_WHITE); // apply Adafruit GFX color
+    u8g2Fonts.setFont(u8g2_font_helvB10_tf);   // Explore u8g2 fonts from here: https://github.com/olikraus/u8g2/wiki/fntlistall 
 }
 
 void logo_screen(String message)
@@ -250,7 +314,7 @@ void logo_screen(String message)
     uint16_t tbw, tbh;
     display.getTextBounds("iArradio", 0, 0, &tbx, &tby, &tbw, &tbh);
     uint16_t x = ((display.width() - tbw) / 2) - tbx;
-    uint16_t y = ((display.height() - tbh) / 2) - tby;
+    uint16_t y = ((display.height() - tbh) / 3) - tby;
     display.setFullWindow();
     display.firstPage();
     do
@@ -259,9 +323,12 @@ void logo_screen(String message)
         display.setTextColor(GxEPD_BLACK);
         display.setCursor(x, y);
         display.print("iArradio");
-        display.setCursor(0, 150);
-        display.setFont(&FreeSans9pt7b);
-        display.print(message);
+        //display.setCursor(0, 120);
+        u8g2Fonts.setCursor(0, 120);
+        u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+        u8g2Fonts.print(message);
+        //display.setFont(FreeSans9pt7b);
+        //display.print(message);
     } while (display.nextPage());
     display.powerOff();
 }
@@ -273,8 +340,8 @@ void main_interface()
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
         display.drawFastHLine(0, 124, 264, GxEPD_BLACK);
-        display.drawFastHLine(0, 85, 264, GxEPD_BLACK);
-        display.drawFastVLine(108, 0, 85, GxEPD_BLACK);
+        //display.drawFastHLine(0, 85, 264, GxEPD_BLACK);
+        //display.drawFastVLine(108, 0, 85, GxEPD_BLACK);
         subrutine_battery(0);
     } while (display.nextPage());
     display.powerOff();
