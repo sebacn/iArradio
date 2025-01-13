@@ -2,7 +2,7 @@
 
 volatile bool updating = false;
 uint8_t old_capacity = 0;
-uint8_t old_rssi = 0;
+int old_rssi = 0;
 String old_stream_name = "";
 extern Settings settings;
 
@@ -102,16 +102,17 @@ void task_epaper_rssi(void *parameter)
         if (!updating)
         {
             updating = true;
-            uint8_t rssi = get_wifi_rssi();
+            int rssi = WiFi.RSSI();
+            dbgPrintln("RSSI: " + String(rssi) + ", old_rssi: " + String(old_rssi));
             if (rssi != old_rssi)
             {
                 old_rssi = rssi;
-                set_epaper_wifi_signal(rssi);
+                set_epaper_wifi_signal(245, 10, rssi);
             }
             updating = false;
             vTaskDelay(portTICK_PERIOD_MS * 1250);
         }
-        vTaskDelay(portTICK_PERIOD_MS * 150);
+        vTaskDelay(portTICK_PERIOD_MS * 15000); //150);
     }
     vTaskDelete(NULL);
 }

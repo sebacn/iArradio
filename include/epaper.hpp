@@ -27,6 +27,7 @@ void subrutine_cursor_station(bool volume_mode);
 void set_epaper_cursor(bool volume_mode);
 void set_epaper_station_number(uint8_t value);
 void subrutine_station_number(uint8_t value);
-void set_epaper_wifi_signal(uint8_t rssi);
+//void set_epaper_wifi_signal(uint8_t rssi);
 void subrutine_wifi_signal(uint8_t rssi);
 void epaper_draw_heading_section();
+void set_epaper_wifi_signal(int x, int y, int rssi);

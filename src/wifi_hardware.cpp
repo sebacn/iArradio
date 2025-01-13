@@ -117,28 +117,6 @@ void init_wifi()
     }
 }
 
-int get_wifi_rssi()
-{
-    long rssi = WiFi.RSSI();
-    if (rssi > -67)
-    {
-        return 5;
-    }
-    if (rssi >= -70 && rssi < -67)
-    {
-        return 4;
-    }
-    if (rssi >= -80 && rssi < -70)
-    {
-        return 3;
-    }
-    if (rssi >= -90 && rssi < -80)
-    {
-        return 2;
-    }
-    return 1;
-}
-
 void configModeCallback(WiFiManager *myWiFiManager)
 {
     dbgPrintln("configModeCallback");

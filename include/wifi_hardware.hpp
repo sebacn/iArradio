@@ -7,7 +7,6 @@
 #include "translations.hpp"
 
 void init_wifi();
-int get_wifi_rssi();
 void configModeCallback(WiFiManager *myWiFiManager);
 void wifi_rutine();
 

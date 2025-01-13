@@ -1,4 +1,5 @@
 #include "epaper.hpp"
+#include <WiFi.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h>
@@ -26,6 +27,13 @@ GxEPD2_BW<GxEPD2_270, GxEPD2_270::HEIGHT> display(GxEPD2_270(EPAPER_CS, EPAPER_D
 //GxEPD2_3C<GxEPD2_270c, GxEPD2_270c::HEIGHT> display(GxEPD2_270c(/*CS=*/5, /*DC=*/17, /*RST=*/16, /*BUSY=*/4));
 
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
+// Using fonts:
+// u8g2_font_helvB08_tf
+// u8g2_font_helvB10_tf
+// u8g2_font_helvB12_tf
+// u8g2_font_helvB14_tf
+// u8g2_font_helvB18_tf
+// u8g2_font_helvB24_tf
 
 #define SCREEN_WIDTH   display.width()
 #define SCREEN_HEIGHT  display.height()
@@ -57,7 +65,12 @@ void DrawBattery(int x, int y) {
     display.drawRect(x + 15, y - 12, 19, 10, GxEPD_BLACK);
     display.fillRect(x + 34, y - 10, 2, 5, GxEPD_BLACK);
     display.fillRect(x + 17, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
-    drawString(x + 60, y - 11, String(percentage) + "%", RIGHT);
+
+    u8g2Fonts.setCursor(x+40, y-3);
+    u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
+    u8g2Fonts.print(String(percentage) + "%");
+ 
+    //drawString(x + 40, y, String(percentage) + "%", RIGHT);
     //drawString(x + 13, y + 5,  String(voltage, 2) + "v", CENTER);
   }
 }
@@ -161,37 +174,33 @@ void set_epaper_station(String station)
     display.powerOff();
 }
 
-void subrutine_wifi_signal(uint8_t rssi)
-{
-    display.setFont(&fontello10pt7b);
-    display.setCursor(87, 111);
-    switch (rssi)
-    {
-    case 1:
-        display.print(WIFI_ICON_1);
-        break;
-    case 2:
-        display.print(WIFI_ICON_2);
-        break;
-    case 3:
-        display.print(WIFI_ICON_3);
-        break;
-    case 4:
-        display.print(WIFI_ICON_4);
-        break;
-    case 5:
-        display.print(WIFI_ICON_5);
-        break;
+void DrawRSSI(int x, int y, int rssi) {
+
+    dbgPrintln("DrawRSSI");
+
+    int WIFIsignal = 0;
+    int xpos = 0;
+    for (int _rssi = -100; _rssi <= rssi; _rssi = _rssi + 20) {
+        if (_rssi <= -20)  WIFIsignal = 10; //            <-20dbm displays 5-bars
+        if (_rssi <= -40)  WIFIsignal = 8; //  -40dbm to  -21dbm displays 4-bars
+        if (_rssi <= -60)  WIFIsignal = 6; //  -60dbm to  -41dbm displays 3-bars
+        if (_rssi <= -80)  WIFIsignal = 4; //  -80dbm to  -61dbm displays 2-bars
+        if (_rssi <= -100) WIFIsignal = 2;  // -100dbm to  -81dbm displays 1-bar
+        display.fillRect(x + xpos * 4, y - WIFIsignal, 3, WIFIsignal, GxEPD_BLACK);
+        xpos++;
     }
+
+    display.drawFastHLine(x, 13, 264-y, GxEPD_BLACK);
 }
 
-void set_epaper_wifi_signal(uint8_t rssi)
+void set_epaper_wifi_signal(int x, int y, int rssi)
 {
-    display.setPartialWindow(87, 97, 40, 17);
+    dbgPrintln("set_epaper_wifi_signal");
+    display.setPartialWindow(x, y-10, 20, 10);
     do
     {
         display.fillScreen(GxEPD_WHITE);
-        subrutine_wifi_signal(rssi);
+        DrawRSSI(x, y, rssi);
     } while (display.nextPage());
     display.powerOff();
 }
@@ -340,9 +349,25 @@ void main_interface()
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
         display.drawFastHLine(0, 124, 264, GxEPD_BLACK);
-        //display.drawFastHLine(0, 85, 264, GxEPD_BLACK);
+        display.drawFastHLine(0, 13, 264, GxEPD_BLACK);
+
+        u8g2Fonts.setCursor(0, 12);
+        u8g2Fonts.setFont(u8g2_font_helvB10_tf);
+        u8g2Fonts.print(settings.City);
+
+        u8g2Fonts.setCursor(110, 10);
+        u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
+        u8g2Fonts.print(date_str);
+
+        DrawBattery(170, 13);
+
+        //set_epaper_wifi_signal(245, 10, WiFi.RSSI());
+
+        
+
         //display.drawFastVLine(108, 0, 85, GxEPD_BLACK);
         subrutine_battery(0);
+
     } while (display.nextPage());
     display.powerOff();
 }
