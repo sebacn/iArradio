@@ -39,6 +39,12 @@ void update_datetime(TimeZoneDbResponse& datetime_resp, JsonObject& jobj) {
     datetime_resp.gmt_offset = jobj["gmtOffset"].as<int>();
     datetime_resp.dst = jobj["dst"].as<int>();
     datetime_resp.formatted = jobj["formatted"].as<String>();
+
+    struct timeval tv;
+    tv.tv_sec = datetime_request.response.dt;
+    settimeofday(&tv, NULL);
+
+    dbgPrintln("DtaTime updated (update_datetime");
 }
 
 bool location_handler(WiFiClient& resp_stream, Request request) {

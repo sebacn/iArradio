@@ -3,12 +3,17 @@
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h>
+#include <Fonts/FreeSansBold12pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/FreeSansBold24pt7b.h>
+#include <Fonts/FreeMono9pt7b.h>
+
 #include "resources/weather-icons.hpp"
 #include "resources/fontello10pt7b.hpp"
 #include <U8g2_for_Adafruit_GFX.h>
 #include "settings.hpp"
+#include "battery.hpp"
+#include "lang.hpp"
 
 #define SPEAKER_ICON "0"
 #define SELECTED_ICON "1"
@@ -20,7 +25,15 @@
 #define WIFI_ICON_4 "6"
 #define WIFI_ICON_5 "5"
 
+#define rssi_x 245
+#define rssi_y 10
+#define battery_x 175
+#define battery_y 13
+#define time_x 175
+#define time_y 55
+
 extern Settings settings;
+struct DateTimeInfo dtInfo;
 
 //2.7″ E-Paper module 264*176 Pixels
 GxEPD2_BW<GxEPD2_270, GxEPD2_270::HEIGHT> display(GxEPD2_270(EPAPER_CS, EPAPER_DC, EPAPER_RST, EPAPER_BUSY));
@@ -40,8 +53,39 @@ U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
 enum alignmentType {LEFT, RIGHT, CENTER};
 
-extern String date_str;
-extern String time_str;
+/*
+String get_day_of_week(int wday)
+{
+    String days[7] = {SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY};
+    return days[wday];
+}
+*/
+
+void refresh_date_time_now()
+{
+    struct tm now2;
+    char ts_str[10];
+    char day_output[15];
+
+    dtInfo.time = "--:--";
+    dtInfo.weekDay = weekday_DD[0];
+    dtInfo.date = "01-Jan-1970";
+
+    dbgPrintln("refresh_date_time_now");
+
+    if (getLocalTime(&now2)) //max 10 ms
+    {
+        strftime(ts_str, sizeof(ts_str), "%H:%M", &now2);
+      
+        dtInfo.time = String(ts_str);
+        dtInfo.weekDay = weekday_DD[now2.tm_wday];
+
+        sprintf(day_output, "%02u-%s-%04u", now2.tm_mday, month_M[now2.tm_mon], (now2.tm_year) + 1900);
+        dtInfo.date = String(day_output);
+    }
+
+    dbgPrintln("Date : " + dtInfo.date + ", Time: " + dtInfo.time + ", Day: " + dtInfo.weekDay);
+}
 
 void drawString(int x, int y, String text, alignmentType alignment) {
   int16_t  x1, y1; //the bounds of x,y and w and h of the variable 'text' in pixels.
@@ -54,14 +98,8 @@ void drawString(int x, int y, String text, alignmentType alignment) {
   u8g2Fonts.print(text);
 }
 
-void DrawBattery(int x, int y) {
-  uint8_t percentage = 100;
-  float voltage = analogRead(35) / 4096.0 * 7.46;
-  if (voltage > 1 ) { // Only display if there is a valid reading
-    dbgPrintln("Voltage = " + String(voltage));
-    percentage = 2836.9625 * pow(voltage, 4) - 43987.4889 * pow(voltage, 3) + 255233.8134 * pow(voltage, 2) - 656689.7123 * voltage + 632041.7303;
-    if (voltage >= 4.20) percentage = 100;
-    if (voltage <= 3.50) percentage = 0;
+void epaper_draw_battery(int x, int y, uint8_t percentage) {
+
     display.drawRect(x + 15, y - 12, 19, 10, GxEPD_BLACK);
     display.fillRect(x + 34, y - 10, 2, 5, GxEPD_BLACK);
     display.fillRect(x + 17, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
@@ -69,12 +107,38 @@ void DrawBattery(int x, int y) {
     u8g2Fonts.setCursor(x+40, y-3);
     u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
     u8g2Fonts.print(String(percentage) + "%");
- 
-    //drawString(x + 40, y, String(percentage) + "%", RIGHT);
-    //drawString(x + 13, y + 5,  String(voltage, 2) + "v", CENTER);
-  }
+  
 }
 
+void epaper_draw_time(int x, int y)
+{
+    refresh_date_time_now();
+
+    dbgPrintln("Draw time: " + dtInfo.time);
+
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&FreeSansBold18pt7b);
+    display.setCursor(time_x, time_y);
+    display.print(dtInfo.time);
+
+}
+
+void epaper_redraw_time()
+{
+    #define time_h 27
+    #define time_w 85
+    dbgPrintln("Redraw: time");
+
+    display.setPartialWindow(time_x, time_y-time_h+1, time_w, time_h);
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        epaper_draw_time(time_x, time_y);
+    } while (display.nextPage());
+    display.powerOff();
+}
+
+/*
 void epaper_draw_heading_section() {
 
   dbgPrintln("City: " + settings.City + ", date: " + date_str + ", time: " + time_str);
@@ -89,25 +153,8 @@ void epaper_draw_heading_section() {
   DrawBattery(55, 12);
 }
 
-/*
-void subrutine_time(String time)
-{
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeSansBold18pt7b);
-    display.setCursor(10, 32);
-    display.print(time);
-}
 
-void set_epaper_time(String time)
-{
-    display.setPartialWindow(10, 6, 85, 27);
-    do
-    {
-        display.fillScreen(GxEPD_WHITE);
-        subrutine_time(time);
-    } while (display.nextPage());
-    display.powerOff();
-}
+
 
 void subrutine_date(String date, String dayOfWeek)
 {
@@ -174,51 +221,56 @@ void set_epaper_station(String station)
     display.powerOff();
 }
 
-void DrawRSSI(int x, int y, int rssi) {
+void epaper_draw_rssi(int x, int y, int rssi) {
 
-    dbgPrintln("DrawRSSI");
+    dbgPrintln("DrawRSSI: " + String(rssi));
 
     int WIFIsignal = 0;
     int xpos = 0;
-    for (int _rssi = -100; _rssi <= rssi; _rssi = _rssi + 20) {
-        if (_rssi <= -20)  WIFIsignal = 10; //            <-20dbm displays 5-bars
-        if (_rssi <= -40)  WIFIsignal = 8; //  -40dbm to  -21dbm displays 4-bars
-        if (_rssi <= -60)  WIFIsignal = 6; //  -60dbm to  -41dbm displays 3-bars
-        if (_rssi <= -80)  WIFIsignal = 4; //  -80dbm to  -61dbm displays 2-bars
+    for (int _rssi = -100; _rssi <= rssi; _rssi = _rssi + 15) {
+        if (_rssi <= -40)  WIFIsignal = 10; //            <-20dbm displays 5-bars
+        if (_rssi <= -55)  WIFIsignal = 8; //  -40dbm to  -21dbm displays 4-bars
+        if (_rssi <= -70)  WIFIsignal = 6; //  -60dbm to  -41dbm displays 3-bars
+        if (_rssi <= -85)  WIFIsignal = 4; //  -80dbm to  -61dbm displays 2-bars
         if (_rssi <= -100) WIFIsignal = 2;  // -100dbm to  -81dbm displays 1-bar
         display.fillRect(x + xpos * 4, y - WIFIsignal, 3, WIFIsignal, GxEPD_BLACK);
         xpos++;
     }
-
-    display.drawFastHLine(x, 13, 264-y, GxEPD_BLACK);
 }
 
-void set_epaper_wifi_signal(int x, int y, int rssi)
+void epaper_redraw_rssi(int rssi)
 {
-    dbgPrintln("set_epaper_wifi_signal");
-    display.setPartialWindow(x, y-10, 20, 10);
+    #define rssi_w 20
+    #define rssi_h 10
+
+    dbgPrintln("set_epaper_wifi_signal"); 
+    display.setPartialWindow(rssi_x, rssi_y-rssi_h, rssi_w, rssi_h);
     do
     {
         display.fillScreen(GxEPD_WHITE);
-        DrawRSSI(x, y, rssi);
+        epaper_draw_rssi(rssi_x, rssi_y, rssi);
+        display.drawFastHLine(rssi_x, 13, rssi_w, GxEPD_BLACK);
     } while (display.nextPage());
     display.powerOff();
 }
 
+/*
 void subrutine_battery(uint8_t percentage)
 {
     display.drawRect(5, 98, 40, 15, GxEPD_BLACK);
     display.fillRect(45, 102, 3, 7, GxEPD_BLACK);
     display.fillRect(5, 98, (int16_t)(40 * percentage / 100), 15, GxEPD_BLACK);
 }
+*/
 
-void set_epaper_battery(uint8_t percentage)
+void epaper_redraw_battery(uint8_t percentage)
 {
-    display.setPartialWindow(0, 97, 42, 17);
+    display.setPartialWindow(battery_x, 0, 65, 9);
     do
     {
         display.fillScreen(GxEPD_WHITE);
-        subrutine_battery(percentage);
+        epaper_draw_battery(battery_x, battery_y, percentage);
+        display.drawFastHLine(battery_x, battery_y, 65, GxEPD_BLACK);
     } while (display.nextPage());
     display.powerOff();
 }
@@ -330,6 +382,17 @@ void logo_screen(String message)
     {
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
+
+        u8g2Fonts.setCursor(0, 12);
+        u8g2Fonts.setFont(u8g2_font_helvB10_tf);
+        u8g2Fonts.print(settings.City);
+
+        u8g2Fonts.setCursor(110, 10);
+        u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
+        u8g2Fonts.print(dtInfo.date);
+
+        epaper_draw_battery(battery_x + 20, battery_y, get_battery_capacity());
+
         display.setCursor(x, y);
         display.print("iArradio");
         //display.setCursor(0, 120);
@@ -344,6 +407,8 @@ void logo_screen(String message)
 
 void main_interface()
 {
+    refresh_date_time_now();
+
     do
     {
         display.fillScreen(GxEPD_WHITE);
@@ -357,17 +422,22 @@ void main_interface()
 
         u8g2Fonts.setCursor(110, 10);
         u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
-        u8g2Fonts.print(date_str);
+        u8g2Fonts.print(dtInfo.date);
 
-        DrawBattery(170, 13);
+        epaper_draw_battery(battery_x, battery_y, get_battery_capacity());
+        epaper_draw_rssi(rssi_x, rssi_y, WiFi.RSSI());
+        epaper_draw_time(time_x, time_y);
 
-        //set_epaper_wifi_signal(245, 10, WiFi.RSSI());
+        display.setFont(&FreeSansBold9pt7b);
+        display.setCursor(time_x, time_y + 20);
+        display.print(dtInfo.weekDay);
 
-        
+        //set_epaper_wifi_signal(245, 10, -60, true);
 
         //display.drawFastVLine(108, 0, 85, GxEPD_BLACK);
-        subrutine_battery(0);
+        //subrutine_battery(0);
 
     } while (display.nextPage());
+
     display.powerOff();
 }

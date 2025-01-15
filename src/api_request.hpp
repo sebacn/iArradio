@@ -13,11 +13,6 @@
 
 struct Request;
 
-//bool location_handler(WiFiClient& resp_stream, Request request);
-//bool datetime_handler(WiFiClient& resp_stream, Request request);
-//bool weather_handler(WiFiClient& resp_stream, Request request);
-//bool http_request_data(Request request, unsigned int retry);
-//JsonDocument deserialize(WiFiClient& resp_stream, bool is_embeded=false);
 bool http_request_datetime(Settings *settings);
 bool http_request_location(Settings *settings);
 bool http_request_weather(Settings *settings);

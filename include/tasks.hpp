@@ -6,9 +6,9 @@
 #include "wifi_hardware.hpp"
 #include "eeprom_settings.hpp"
 
-//void task_ntp(void *parameter);
+void task_time(void *parameter);
 void task_weather(void *parameter);
-//void task_epaper_battery(void *parameter);
+void task_epaper_battery(void *parameter);
 void task_epaper_header(void *parameter);
 void task_audio_stream(void *parameter);
 void task_stream_title(void *parameter);

@@ -1,3 +1,6 @@
+#ifndef _epaper_h
+#define _epaper_h
+
 #include <Arduino.h>
 #include <SPI.h>
 #define ENABLE_GxEPD2_GFX 0
@@ -5,6 +8,12 @@
 #include <GxEPD2_BW.h>
 // #include <GxEPD2_3C.h>
 #include "hal.hpp"
+
+struct DateTimeInfo {
+    String time;
+    String date;
+    String weekDay;
+};
 
 void init_display();
 void weathericonsTest();
@@ -28,6 +37,17 @@ void set_epaper_cursor(bool volume_mode);
 void set_epaper_station_number(uint8_t value);
 void subrutine_station_number(uint8_t value);
 //void set_epaper_wifi_signal(uint8_t rssi);
-void subrutine_wifi_signal(uint8_t rssi);
-void epaper_draw_heading_section();
-void set_epaper_wifi_signal(int x, int y, int rssi);
+//void subrutine_wifi_signal(uint8_t rssi);
+//void epaper_draw_heading_section();
+//void set_epaper_wifi_signal(int x, int y, int rssi);
+
+void epaper_draw_battery(int x, int y, uint8_t percentage);
+void epaper_redraw_battery(uint8_t percentage);
+
+void epaper_draw_rssi(int x, int y, int rssi);
+void epaper_redraw_rssi(int rssi);
+
+void epaper_draw_time(int x, int y);
+void epaper_redraw_time();
+
+#endif

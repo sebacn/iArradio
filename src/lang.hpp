@@ -1,3 +1,7 @@
+#ifndef _lang_h
+#define _lang_h
+
+
 #define FONT(x) x##_tf
 #include <Arduino.h> 
 
@@ -67,6 +71,9 @@ const String TXT_NNW = "NNW";
 
 //Day of the week
 const char* weekday_D[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+const char* weekday_DD[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 //Month
 const char* month_M[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+#endif

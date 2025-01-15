@@ -1,39 +1,35 @@
 #include "tasks.hpp"
+#include "fmt.hpp"
 
 volatile bool updating = false;
 uint8_t old_capacity = 0;
 int old_rssi = 0;
 String old_stream_name = "";
 extern Settings settings;
+String time_str;
 
 void set_updating(bool value)
 {
     updating = value;
 }
 
-/*
-void task_ntp(void *parameter)
+void task_time(void *parameter)
 {
     for (;;)
-    {
-        if (WiFi.status() == WL_CONNECTED)
+    {        
+        if (!updating)
         {
-            if (!updating)
-            {
-                updating = true;
-                ntp_update_rutine();
-                updating = false;
-                vTaskDelay(portTICK_PERIOD_MS * 1000);
-            }
-            vTaskDelay(portTICK_PERIOD_MS * 15);
+            updating = true;
+            dbgPrintln("Redraw: time");
+            epaper_redraw_time();
+            updating = false;
+            vTaskDelay(portTICK_PERIOD_MS * 1000);
         }
-        else
-        {
-            vTaskDelay(portTICK_PERIOD_MS * 60000); //1min
-        }
+        vTaskDelay(portTICK_PERIOD_MS * 30000);
     }
     vTaskDelete(NULL);
 }
+
 
 void task_weather(void *parameter)
 {
@@ -44,20 +40,16 @@ void task_weather(void *parameter)
             if (!updating)
             {
                 updating = true;
-                weather_update_rutine();
+                dbgPrintln("Redraw: weather");
+                //weather_update_rutine();
                 updating = false;
-                vTaskDelay(portTICK_PERIOD_MS * 500000);
             }
             vTaskDelay(portTICK_PERIOD_MS * 32);
         }
-        else
-        {
-            vTaskDelay(portTICK_PERIOD_MS * 60000); //1min
-        }
+        vTaskDelay(portTICK_PERIOD_MS * 1200000L); //20min
     }
     vTaskDelete(NULL);
 }
-
 
 void task_epaper_battery(void *parameter)
 {
@@ -69,17 +61,19 @@ void task_epaper_battery(void *parameter)
             uint8_t capacity = get_battery_capacity();
             if (capacity != old_capacity)
             {
+                dbgPrintln("Redraw: Battery cap: " + String(capacity) + ", old_capacity: " + String(old_capacity));
                 old_capacity = capacity;
-                set_epaper_battery(capacity);
+                epaper_redraw_battery(capacity);
             }
             updating = false;
-            vTaskDelay(portTICK_PERIOD_MS * 30500);
+            vTaskDelay(portTICK_PERIOD_MS * 30500); //30 sec
         }
-        vTaskDelay(portTICK_PERIOD_MS * 24);
+        vTaskDelay(portTICK_PERIOD_MS * 24000); //24 sec
     }
     vTaskDelete(NULL);
 }
-*/
+
+/*
 void task_epaper_header(void *parameter)
 {
     for (;;)
@@ -94,6 +88,7 @@ void task_epaper_header(void *parameter)
     }
     vTaskDelete(NULL);
 }
+*/
 
 void task_epaper_rssi(void *parameter)
 {
@@ -103,11 +98,11 @@ void task_epaper_rssi(void *parameter)
         {
             updating = true;
             int rssi = WiFi.RSSI();
-            dbgPrintln("RSSI: " + String(rssi) + ", old_rssi: " + String(old_rssi));
             if (rssi != old_rssi)
             {
+                dbgPrintln("Redraw: RSSI: " + String(rssi) + ", old_rssi: " + String(old_rssi));
                 old_rssi = rssi;
-                set_epaper_wifi_signal(245, 10, rssi);
+                epaper_redraw_rssi(rssi);
             }
             updating = false;
             vTaskDelay(portTICK_PERIOD_MS * 1250);
