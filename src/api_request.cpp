@@ -3,9 +3,7 @@
 #include <WiFi.h>               // In-built
 #include <SPI.h>                // In-built
 #include "api_request.hpp"
-
-String dbgPrintln(String _str);
-String infoPrintln(String _str);
+#include "locallog.hpp"
 
 WiFiClientSecure client;
 
@@ -44,7 +42,7 @@ void update_datetime(TimeZoneDbResponse& datetime_resp, JsonObject& jobj) {
     tv.tv_sec = datetime_request.response.dt;
     settimeofday(&tv, NULL);
 
-    dbgPrintln("DtaTime updated (update_datetime");
+    llog_d("DtaTime updated (update_datetime)");
 }
 
 bool location_handler(WiFiClient& resp_stream, Request request) {
@@ -57,7 +55,7 @@ bool location_handler(WiFiClient& resp_stream, Request request) {
     }
     location_request = GeocodingNominatimRequest(request);
     GeocodingNominatimResponse& location_resp = location_request.response;
-    dbgPrintln("Geocoding...");
+    llog_d("Geocoding...");
     update_location(location_resp, api_resp);
     location_resp.print();
     return true;
@@ -92,7 +90,7 @@ bool weather_handler(WiFiClient& resp_stream, Request request) {
 
 JsonDocument deserialize(WiFiClient& resp_stream, bool is_embeded) {
     // https://arduinojson.org/v6/assistant/
-    dbgPrintln("Deserializing json, size: x bytes...");
+    llog_d("Deserializing json, size: x bytes...");
     JsonDocument doc;//(size);
     DeserializationError error;
     
@@ -100,20 +98,18 @@ JsonDocument deserialize(WiFiClient& resp_stream, bool is_embeded) {
         String stream_as_string = resp_stream.readString();
         int begin = stream_as_string.indexOf('{');
         int end = stream_as_string.lastIndexOf('}');
-        dbgPrintln("Embeded json algorithm obtained document...");
+        llog_d("Embeded json algorithm obtained document...");
         String trimmed_json = stream_as_string.substring(begin, end+1);
-        dbgPrintln(trimmed_json);
+        llog_d("JSON: %s", trimmed_json.c_str());
         error = deserializeJson(doc, trimmed_json);
     } else {
         error = deserializeJson(doc, resp_stream);
     }
     if (error) {
-        dbgPrintln(F("deserialization error:"));
-        dbgPrintln(error.c_str());
+        llog_d("deserialization error: %s\n", error.c_str());
     } else {
-        dbgPrintln("deserialized.");
+        llog_d("deserialized.\n");
     }
-    dbgPrintln("");
     return doc;
 }
 
@@ -125,18 +121,18 @@ bool http_request_data(Request request, unsigned int retry)
         ret_val = true;
         client.stop();
         HTTPClient http;
-        infoPrintln("HTTP connecting to " + request.server + request.path + " [retry left: " + String(retry) + "]");
+        llog_i("HTTP connecting to %s%s [retry left: %d]", request.server.c_str(), request.path.c_str(), retry);
         client.setCACert(request.ROOT_CA);
         http.begin(client, request.server, 443, request.path);
         int http_code = http.GET();
         
         if(http_code == HTTP_CODE_OK) {
-            infoPrintln("HTTP connection OK");
+            llog_i("HTTP connection OK");
             if (!request.handler(http.getStream(), request)) {
                 ret_val = false;
             }
         } else {
-            infoPrintln("HTTP connection failed " + String(http_code) + ", error: " + http.errorToString(http_code));
+            llog_i("HTTP connection failed %d, error: %s", http_code, http.errorToString(http_code));
             ret_val = false;
         }
         client.stop();
@@ -148,7 +144,7 @@ bool http_request_data(Request request, unsigned int retry)
 
 bool http_request_datetime(Settings *settings)
 {
-    dbgPrintln("http_request_datetime");
+    llog_d("HTTP request datetime");
     datetime_request.api_key = settings->TimezBBKey;            
     datetime_request.handler = datetime_handler;
     datetime_request.make_path(settings->Latitude, settings->Longitude);
@@ -158,7 +154,7 @@ bool http_request_datetime(Settings *settings)
 
 bool http_request_location(Settings *settings)
 {
-    dbgPrintln("http_request_location");
+    llog_d("HTTP request location");
     location_request.handler = location_handler;
     location_request.name = settings->City;
     location_request.api_key = settings->PositionStackKey;
@@ -176,7 +172,7 @@ bool http_request_location(Settings *settings)
 
 bool http_request_weather(Settings *settings)
 {
-    dbgPrintln("http_request_weather");
+    llog_d("HTTP request weather");
     weather_request.api_key = settings->OwmApikey;
     weather_request.handler = weather_handler;
     weather_request.make_path(settings->Latitude, settings->Longitude, settings->Units);

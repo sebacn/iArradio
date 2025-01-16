@@ -10,6 +10,7 @@
 #include <HTTPClient.h> 
 #include "settings.hpp"
 #include "i18n.hpp"
+#include "locallog.hpp"
 
 struct Request;
 
@@ -67,7 +68,7 @@ struct TimeZoneDbResponse {
             ti->tm_hour, ti->tm_min, ti->tm_wday, 
             ti->tm_mday, ti->tm_mon+1, 1900+ti->tm_year
         );
-        dbgPrintln("TimeZoneDbResponse: " + String(buffer));
+        llog_d("TimeZoneDbResponse: %s", buffer);
     }
 } ;
 
@@ -98,8 +99,7 @@ struct AirQualityResponse {
     int pm25;
     
     void print() {
-        dbgPrintln("Air quality (PM2.5): " + String(pm25));
-        dbgPrintln("");
+        llog_d("Air quality (PM2.5): %d\n",pm25);
     }
 } ;
 
@@ -132,9 +132,7 @@ struct GeocodingNominatimResponse {
     String label = "";
     
     void print() {
-        dbgPrintln("");
-        dbgPrintln("City: (" + String(lat) + ", " + String(lon) + ") " + label);
-        dbgPrintln("");
+        llog_d("City: %s (lat %f, lon %f)\n", label, lat, lon);
     }
 } ;
 
@@ -192,7 +190,7 @@ struct WeatherResponseHourly {  // current and hourly
             "max_t", "min_t", "pressure", "clouds", "wind_bft", 
             "wind_deg", "icon", "snow", "rain", "pop"
         );
-        dbgPrintln("WeatherResponseHourly1: " + String(buffer));
+        llog_d("WeatherResponseHourly1: %s", String(buffer));
         sprintf(
             buffer, 
             "%8s %8s %8s %8d %8d %8d %8d %8d %8d %8d %8d %8s %8.1f %8.1f %8d",
@@ -201,7 +199,7 @@ struct WeatherResponseHourly {  // current and hourly
             pressure, clouds, wind_bft, wind_deg,
             icon, snow, rain, pop
         );
-        dbgPrintln("WeatherResponseHourly2: " + String(buffer));
+        llog_d("WeatherResponseHourly2: %s", String(buffer));
     }
 } ;
 
@@ -218,14 +216,14 @@ struct WeatherResponseDaily {
 
     void print() {
         char buffer[100];
-        dbgPrintln("Forecast: " + ts2dm(date_ts));
+        llog_d("Forecast: %s", ts2dm(date_ts));
         sprintf(
             buffer, 
             "%8s %8s %8s %8s %8s %8s %8s",
             "max_t", "min_t", "wind_bft", 
             "wind_deg", "pop", "snow", "rain"
         );
-        dbgPrintln("WeatherResponseDaily: " + String(buffer));
+        llog_d("WeatherResponseDaily: %s", String(buffer));
         //Serial.printf("%15s", "");
         sprintf(
             buffer, 
@@ -233,7 +231,7 @@ struct WeatherResponseDaily {
             max_t, min_t, wind_bft, wind_deg, pop,
             snow? "yes" : "no", rain? "yes" : "no"
         );
-        dbgPrintln("WeatherResponseDaily: " + String(buffer));
+        llog_d("WeatherResponseDaily: %s", String(buffer));
     }
 
 } ;
@@ -249,20 +247,20 @@ struct WeatherResponseRainHourly {
 
     void print() {
         char buffer[60];
-        dbgPrintln("Rain: " + ts2date(date_ts));
+        llog_d("Rain: %s", ts2date(date_ts));
         sprintf(
             buffer, 
             "%8s %8s %8s %8s %8s",
             "pop", "snow", "rain", "feel", "icon"
         );
-        dbgPrintln("WeatherResponseRainHourly: " + String(buffer));
+        llog_d("WeatherResponseRainHourly: %s", String(buffer));
         //Serial.printf("%25s", "");
         sprintf(
             buffer, 
             "%8d %8.1f %8.1f %8.1f %8s",
             pop, snow, rain, feel_t, icon
         );
-        dbgPrintln("WeatherResponseRainHourly: " + String(buffer));
+        llog_d("WeatherResponseRainHourly: %s", String(buffer));
     }
 } ;
 

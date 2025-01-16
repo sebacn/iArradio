@@ -15,6 +15,7 @@ Preferences preferences;
 
 QRCode qrcode;
 
+/*
 String infoPrintln(String _str) {
     Serial.printf("%.03f ",millis()/1000.0f); Serial.println("[I] " + _str);
     return _str + '\n';
@@ -29,6 +30,7 @@ String dbgPrintln(String _str) {
     #endif
     return _str + '\n';
 }
+*/
 
 void print_pt()
 {
@@ -52,13 +54,13 @@ void print_pt()
   uint32_t free_sketch_space = ESP.getFreeSketchSpace();
 
   Serial.println("");
-  infoPrintln("Build date time: " + String(__DATE__) + " " + __TIME__);
-  infoPrintln("Sketch size: " + String(program_size));
-  infoPrintln("Free sketch space: " + String(free_sketch_space));
-  infoPrintln("Flash chip size: " + String(free_size));
-  infoPrintln("Psram size: " + String(psram_size));
-  infoPrintln("Stack size: " + String(CONFIG_ARDUINO_LOOP_STACK_SIZE));
-  infoPrintln("uxTaskGetStackHighWaterMark: " + String(uxTaskGetStackHighWaterMark(NULL)) + "\n\n"); 
+  llog_i("Build date time: %s %s", __DATE__, __TIME__);
+  llog_i("Sketch size: %d", program_size);
+  llog_i("Free sketch space: %d", free_sketch_space);
+  llog_i("Flash chip size: %d", free_size);
+  llog_i("Psram size: %d", psram_size);
+  llog_i("Stack size: %d", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+  llog_i("uxTaskGetStackHighWaterMark: %d\n\n", uxTaskGetStackHighWaterMark(NULL)); 
 }
 
 String print_reset_reason(RESET_REASON reason) {
@@ -89,18 +91,18 @@ void wakeup_reason() {
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
 
-    dbgPrintln("CPU0 reset reason: " + print_reset_reason(rtc_get_reset_reason(0)));
-    dbgPrintln("CPU1 reset reason: " + print_reset_reason(rtc_get_reset_reason(1)) + "\n");
+    llog_i("CPU 0 reset reason: %s", print_reset_reason(rtc_get_reset_reason(0)));
+    llog_i("CPU 1 reset reason: %s\n", print_reset_reason(rtc_get_reset_reason(1)));
     
     switch(wakeup_reason){
         //dbgPrintln("Location variable: " + String(curr_loc));
         
-        case ESP_SLEEP_WAKEUP_EXT0 : dbgPrintln("Wakeup by ext signal RTC_IO -> GPIO39"); break;      
-        case ESP_SLEEP_WAKEUP_EXT1 : dbgPrintln("Wakeup by ext signal RTC_CNTL -> GPIO34"); break;            
-        case ESP_SLEEP_WAKEUP_TIMER : dbgPrintln("Wakeup by timer"); break;
-        case ESP_SLEEP_WAKEUP_TOUCHPAD : dbgPrintln("Wakeup by touchpad"); break;
-        case ESP_SLEEP_WAKEUP_ULP : dbgPrintln("Wakeup by ULP program"); break;
-        default : dbgPrintln("Wakeup not caused by deep sleep: " + String(wakeup_reason)); 
+        case ESP_SLEEP_WAKEUP_EXT0 : llog_d("Wakeup by ext signal RTC_IO -> GPIO39"); break;      
+        case ESP_SLEEP_WAKEUP_EXT1 : llog_d("Wakeup by ext signal RTC_CNTL -> GPIO34"); break;            
+        case ESP_SLEEP_WAKEUP_TIMER : llog_d("Wakeup by timer"); break;
+        case ESP_SLEEP_WAKEUP_TOUCHPAD : llog_d("Wakeup by touchpad"); break;
+        case ESP_SLEEP_WAKEUP_ULP : llog_d("Wakeup by ULP program"); break;
+        default : llog_d("Wakeup not caused by deep sleep: %d", wakeup_reason); 
             if (rtc_get_reset_reason(0) == POWERON_RESET && rtc_get_reset_reason(1) == EXT_CPU_RESET)
             {
                 //get_mode();
@@ -111,7 +113,7 @@ void wakeup_reason() {
 }
 
 void read_config_from_memory() {
-    dbgPrintln("Read config from memory...");
+    llog_d("Read config from memory...");
 
     preferences.begin(MEMORY_ID, true);  // first param true means 'read only'
 
@@ -132,7 +134,7 @@ void read_config_from_memory() {
 }
 
 void save_config_to_memory() {
-    dbgPrintln("Save config to memory.");
+    llog_d("Save config to memory.");
     
     preferences.begin(MEMORY_ID, false);  // first param false means 'read/write'
 

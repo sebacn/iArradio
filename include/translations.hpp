@@ -6,7 +6,7 @@
 #define FRIDAY String("VIERNES")
 #define SATURDAY String("SABADO")
 
-#define POWEROFF String("Apagado")
-#define LOWBATT String("Bat. Baja")
-#define LISTENING String("Escuchando")
+#define POWEROFF String("Power-off")
+#define LOWBATT String("Low battery")
+#define LISTENING String("Listening")
 #define CONFIGURE_WIFI String("Configure wifi")

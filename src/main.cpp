@@ -12,6 +12,7 @@
 #include "hal.hpp"
 //#include "lang.hpp"
 #include "api_request.hpp"
+#include "locallog.hpp"
 
 extern Settings settings;
 
@@ -72,9 +73,9 @@ boolean UpdateLocalTime() {
 void setup()
 {
     Serial.begin(115200);
+    llog_d("");
     init_display();
     init_wifi();
-    //init_ntp();
     UpdateLocalTime();
     main_interface();
     eeprom_init();

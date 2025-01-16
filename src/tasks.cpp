@@ -20,7 +20,7 @@ void task_time(void *parameter)
         if (!updating)
         {
             updating = true;
-            dbgPrintln("Redraw: time");
+            llog_d("Task Redraw time");
             epaper_redraw_time();
             updating = false;
             vTaskDelay(portTICK_PERIOD_MS * 1000);
@@ -40,7 +40,7 @@ void task_weather(void *parameter)
             if (!updating)
             {
                 updating = true;
-                dbgPrintln("Redraw: weather");
+                llog_d("Task Redraw weather");
                 //weather_update_rutine();
                 updating = false;
             }
@@ -61,7 +61,7 @@ void task_epaper_battery(void *parameter)
             uint8_t capacity = get_battery_capacity();
             if (capacity != old_capacity)
             {
-                dbgPrintln("Redraw: Battery cap: " + String(capacity) + ", old_capacity: " + String(old_capacity));
+                llog_d("Task Redraw battery cap: %d, old_capacity: %d", capacity, old_capacity);
                 old_capacity = capacity;
                 epaper_redraw_battery(capacity);
             }
@@ -100,7 +100,7 @@ void task_epaper_rssi(void *parameter)
             int rssi = WiFi.RSSI();
             if (rssi != old_rssi)
             {
-                dbgPrintln("Redraw: RSSI: " + String(rssi) + ", old_rssi: " + String(old_rssi));
+                llog_d("Task Redraw: RSSI: %d, old_rssi: %d", rssi, old_rssi);
                 old_rssi = rssi;
                 epaper_redraw_rssi(rssi);
             }

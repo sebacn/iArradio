@@ -1,5 +1,6 @@
 #include "battery.hpp"
 #include "settings.hpp"
+#include "locallog.hpp"
 
 volatile uint8_t low_batt_count = 0;
 
@@ -15,7 +16,7 @@ uint8_t get_battery_capacity()
         percentage = percentage < 0? 0 : percentage;
     }
 
-    dbgPrintln("Voltage: " + String(voltage) + ", percentage: " + String(percentage));
+    llog_d("Voltage: %f, percentage: %d", voltage, percentage);
 
     return percentage;
 }

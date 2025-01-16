@@ -2,6 +2,7 @@
 #include "controls.hpp"
 #include "settings.hpp"
 #include "api_request.hpp"
+#include "locallog.hpp"
 
 WiFiManager wifiManager;
 WiFiManagerParameter *pparmCity;
@@ -15,11 +16,11 @@ extern Settings settings;
 boolean UpdateLocalTime();
 
 uint8_t StartWiFi() {
-    dbgPrintln("Connecting to: " + settings.WiFiSSID);
+    llog_d("Connecting to: %s", settings.WiFiSSID);
 
     if (WiFi.status() == WL_CONNECTED) 
     {
-        infoPrintln("WiFi connected at: " + WiFi.localIP().toString());
+        llog_i("WiFi already connected at: %s", WiFi.localIP().toString());
         return WL_CONNECTED;
     }
 
@@ -30,28 +31,28 @@ uint8_t StartWiFi() {
     WiFi.setAutoReconnect(true);
     WiFi.begin(settings.WiFiSSID.c_str(), settings.WiFiPass.c_str());
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        dbgPrintln("STA: Failed!");
+        llog_d("STA: Failed!");
         WiFi.disconnect(false);
         delay(500);
         WiFi.begin(settings.WiFiSSID.c_str(), settings.WiFiPass.c_str());
     }
     if (WiFi.status() == WL_CONNECTED) {
         //wifi_signal = WiFi.RSSI(); // Get Wifi Signal strength now, because the WiFi will be turned off to save power!
-        infoPrintln("WiFi connected at: " + WiFi.localIP().toString());
+        llog_i("WiFi connected at: %s", WiFi.localIP().toString());
     }
-    else infoPrintln("WiFi connection *** FAILED ***");
+    else llog_i("WiFi connection *** FAILED ***");
     return WiFi.status();
 }
 
 void StopWiFi() {
     WiFi.disconnect();
     WiFi.mode(WIFI_OFF);
-    dbgPrintln("WiFi switched Off");
+    llog_d("WiFi switched Off");
 }
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {
-    dbgPrintln("Should save config");
+    llog_d("Should save config");
 
     settings.WiFiPass = wifiManager.getWiFiPass();
     settings.WiFiSSID = wifiManager.getWiFiSSID();
@@ -68,7 +69,7 @@ void saveConfigCallback () {
 
 void init_wifi()
 {    
-    dbgPrintln("Init wifi");
+    llog_d("");
     print_pt();
     read_config_from_memory();
     wakeup_reason();
@@ -98,7 +99,7 @@ void init_wifi()
     {
         if (!wifiManager.autoConnect(WIFI_AP_NAME, WIFI_AP_PASS))
         {
-            dbgPrintln("Failed to connect and hit timeout");
+            llog_d("Failed to connect and hit timeout");
             logo_screen("Failed connect to WiFi, start web-portal (60 sec timeout)..\n" + CONFIGURE_WIFI + "\nSSID:" + WIFI_AP_NAME + " PASS:" + WIFI_AP_PASS);
             wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASS);
             //power_off();
@@ -106,7 +107,7 @@ void init_wifi()
     }
     else
     {
-        dbgPrintln("Settings is not configured/validated");
+        llog_d("Settings is not configured/validated");
         logo_screen("Settings is not configured/validated.\nTo configure settings connect to " + String(WIFI_AP_NAME) + " PASS:" + WIFI_AP_PASS);
         wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASS);
     }
@@ -119,7 +120,7 @@ void init_wifi()
 
 void configModeCallback(WiFiManager *myWiFiManager)
 {
-    dbgPrintln("configModeCallback");
+    llog_d("configModeCallback");
     logo_screen(CONFIGURE_WIFI + "\nSSID:" + WIFI_AP_NAME + " PASS:" + WIFI_AP_PASS);
 }
 
@@ -128,11 +129,11 @@ bool validate_settings()
     bool ret = true;
     String keyErrMsg;
 
-    dbgPrintln("Validate settings");
+    llog_d("Validate settings");
 
     if (StartWiFi() == WL_CONNECTED) {
 
-        dbgPrintln("Wifi connected, validate settings...");
+        llog_d("Wifi connected, validate settings...");
 
         if (settings.City == "")
         {
@@ -154,7 +155,7 @@ bool validate_settings()
           keyErrMsg += "TimezBBKey,";
         }
 
-        dbgPrintln("Validate key, missing keys: " + (keyErrMsg == ""? "No" : keyErrMsg));
+        llog_d("Validate key, missing keys: %s", (keyErrMsg == ""? "No" : keyErrMsg));
 
         if (keyErrMsg != "")
         {
@@ -163,24 +164,24 @@ bool validate_settings()
         }
         else
         {
-            dbgPrintln("Validate: get locations by names");
+            llog_d("Validate: get locations by names");
 
             if (http_request_location(&settings))
             {
                 if (atof(settings.Latitude.c_str()) == 0 
                  && atof(settings.Longitude.c_str()) == 0 )
                 {
-                    keyErrMsg += dbgPrintln("Validate: location for " + settings.City + " fetch FAILED (lat:0,lon:0)");
+                    keyErrMsg += llog_d("Validate: location for %s fetch FAILED (lat:0,lon:0)", settings.City);
                     ret = false;
                 }
                 else
                 {
-                    dbgPrintln("Validate: location for " + settings.City + " fetched Ok");
+                    llog_d("Validate: location for %s fetched Ok", settings.City);
                 }
             }
             else
             {
-                keyErrMsg += dbgPrintln("Validate: location " + settings.City + " fetch FAILED");
+                keyErrMsg += llog_d("Validate: location %s fetch FAILED", settings.City);
                 ret = false;
             }  
         }
@@ -192,13 +193,13 @@ bool validate_settings()
 
             if (!is_time_fetched)
             {
-                keyErrMsg += dbgPrintln("Time fetch error\nTIMEZDB_KEY not valid");
+                keyErrMsg += llog_d("Time fetch error\nTIMEZDB_KEY not valid");
                 ret = false;
             }
 
             if (!is_weather_fetched)
             {
-                keyErrMsg += dbgPrintln("Weather fetch error\nOPENWEATHER_KEY not valid");
+                keyErrMsg += llog_d("Weather fetch error\nOPENWEATHER_KEY not valid");
                 ret = false;
             }
         } 
@@ -210,7 +211,7 @@ bool validate_settings()
     }
     else
     {
-        dbgPrintln("Wifi connection failed, reboot to config...");
+        llog_d("Wifi connection failed, reboot to config...");
         logo_screen("Wifi connection failed\nReboot to config...");
         ret = false;
     }
@@ -242,11 +243,11 @@ void wifi_rutine()
         {
             configSaved = false;
 
-            dbgPrintln("wifi_rutine configSaved");
+                llog_d("wifi_rutine configSaved");
             
             if (!validate_settings())
             {
-                dbgPrintln("Settings validation failed");
+                llog_d("Settings validation failed");
                 logo_screen("Settings validation failed..\nTo configure settings connect to " + String(WIFI_AP_NAME) + " PASS:" + WIFI_AP_PASS);
                 wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASS);
             }

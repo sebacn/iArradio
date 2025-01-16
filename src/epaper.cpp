@@ -14,6 +14,7 @@
 #include "settings.hpp"
 #include "battery.hpp"
 #include "lang.hpp"
+#include "locallog.hpp"
 
 #define SPEAKER_ICON "0"
 #define SELECTED_ICON "1"
@@ -71,7 +72,7 @@ void refresh_date_time_now()
     dtInfo.weekDay = weekday_DD[0];
     dtInfo.date = "01-Jan-1970";
 
-    dbgPrintln("refresh_date_time_now");
+    llog_d("Refresh date time now");
 
     if (getLocalTime(&now2)) //max 10 ms
     {
@@ -84,7 +85,7 @@ void refresh_date_time_now()
         dtInfo.date = String(day_output);
     }
 
-    dbgPrintln("Date : " + dtInfo.date + ", Time: " + dtInfo.time + ", Day: " + dtInfo.weekDay);
+    llog_d("Current Date: %s, Time: %s, Day: %s", dtInfo.date, dtInfo.time, dtInfo.weekDay);
 }
 
 void drawString(int x, int y, String text, alignmentType alignment) {
@@ -98,23 +99,11 @@ void drawString(int x, int y, String text, alignmentType alignment) {
   u8g2Fonts.print(text);
 }
 
-void epaper_draw_battery(int x, int y, uint8_t percentage) {
-
-    display.drawRect(x + 15, y - 12, 19, 10, GxEPD_BLACK);
-    display.fillRect(x + 34, y - 10, 2, 5, GxEPD_BLACK);
-    display.fillRect(x + 17, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
-
-    u8g2Fonts.setCursor(x+40, y-3);
-    u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
-    u8g2Fonts.print(String(percentage) + "%");
-  
-}
-
 void epaper_draw_time(int x, int y)
 {
     refresh_date_time_now();
 
-    dbgPrintln("Draw time: " + dtInfo.time);
+    llog_d("Draw time: %s", dtInfo.time);
 
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeSansBold18pt7b);
@@ -127,7 +116,7 @@ void epaper_redraw_time()
 {
     #define time_h 27
     #define time_w 85
-    dbgPrintln("Redraw: time");
+    llog_d("ReDraw time");
 
     display.setPartialWindow(time_x, time_y-time_h+1, time_w, time_h);
     do
@@ -223,7 +212,7 @@ void set_epaper_station(String station)
 
 void epaper_draw_rssi(int x, int y, int rssi) {
 
-    dbgPrintln("DrawRSSI: " + String(rssi));
+    llog_d("Draw RSSI: %d", rssi);
 
     int WIFIsignal = 0;
     int xpos = 0;
@@ -242,8 +231,8 @@ void epaper_redraw_rssi(int rssi)
 {
     #define rssi_w 20
     #define rssi_h 10
+    llog_d("ReDraw RSSI: %d", rssi);
 
-    dbgPrintln("set_epaper_wifi_signal"); 
     display.setPartialWindow(rssi_x, rssi_y-rssi_h, rssi_w, rssi_h);
     do
     {
@@ -263,14 +252,29 @@ void subrutine_battery(uint8_t percentage)
 }
 */
 
+void epaper_draw_battery(int x, int y, uint8_t percentage) {
+
+    int shift_right = percentage >= 100? 0 : 5;
+
+    display.drawRect(x + 15 + shift_right, y - 12, 19, 10, GxEPD_BLACK);
+    display.fillRect(x + 34 + shift_right, y - 10, 2, 5, GxEPD_BLACK);
+    display.fillRect(x + 17 + shift_right, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
+
+    u8g2Fonts.setCursor(x + 40 + shift_right, y-3);
+    u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
+    u8g2Fonts.print(String(percentage) + "%");
+  
+}
+
 void epaper_redraw_battery(uint8_t percentage)
 {
-    display.setPartialWindow(battery_x, 0, 65, 9);
+    int shift_right = percentage >= 100? 0 : 5;
+    display.setPartialWindow(battery_x + shift_right, 0, 65, 9);
     do
     {
         display.fillScreen(GxEPD_WHITE);
         epaper_draw_battery(battery_x, battery_y, percentage);
-        display.drawFastHLine(battery_x, battery_y, 65, GxEPD_BLACK);
+        display.drawFastHLine(battery_x + shift_right, battery_y, 65, GxEPD_BLACK);
     } while (display.nextPage());
     display.powerOff();
 }
