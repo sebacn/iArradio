@@ -22,12 +22,12 @@ void logo_screen(String message);
 //void set_epaper_time(String time);
 //void set_epaper_date(String date, String dayOfWeek);
 void set_epaper_meteo(String temperature, char icon);
-void set_epaper_station(String station);
+//void set_epaper_station(String station, bool _resetPosition);
 //void set_epaper_battery(uint8_t percentage);
 //void subrutine_time(String time);
 void subrutine_meteo(String temperature, char icon);
 //void subrutine_date(String date, String dayOfWeek);
-void subrutine_station(String station);
+//void subrutine_station(String station);
 //void subrutine_battery(uint8_t percentage);
 void subrutine_volume(uint8_t value);
 void set_epaper_volume(uint8_t value);
@@ -49,5 +49,8 @@ void epaper_redraw_rssi(int rssi);
 
 void epaper_draw_time(int x, int y);
 void epaper_redraw_time();
+
+void epaper_draw_station(int x, int y, String station);
+void epaper_redraw_station(String station, bool _resetPosition);
 
 #endif

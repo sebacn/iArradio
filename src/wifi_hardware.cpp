@@ -69,8 +69,7 @@ void saveConfigCallback () {
 
 void init_wifi()
 {    
-    llog_d("");
-    print_pt();
+    llog_d("WiFi Init");
     read_config_from_memory();
     wakeup_reason();
 
@@ -94,6 +93,7 @@ void init_wifi()
     wifiManager.addParameter(pparmUnits);
 
     logo_screen("Connecting to WiFi: " + String(WIFI_AP_NAME));
+    llog_i("Connecting to WiFi: %s", settings.WiFiSSID.c_str());
 
     if (settings.ConfigOk)
     {
@@ -116,6 +116,8 @@ void init_wifi()
     {
         delay(3000);
     }
+
+    llog_i("WiFi status: %d", WiFi.status());
 }
 
 void configModeCallback(WiFiManager *myWiFiManager)

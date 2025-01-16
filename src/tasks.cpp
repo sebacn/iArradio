@@ -6,6 +6,7 @@ uint8_t old_capacity = 0;
 int old_rssi = 0;
 String old_stream_name = "";
 extern Settings settings;
+extern String station_text;
 String time_str;
 
 void set_updating(bool value)
@@ -98,7 +99,7 @@ void task_epaper_rssi(void *parameter)
         {
             updating = true;
             int rssi = WiFi.RSSI();
-            if (rssi != old_rssi)
+            if (rssi != old_rssi && abs(rssi - old_rssi) > 3)
             {
                 llog_d("Task Redraw: RSSI: %d, old_rssi: %d", rssi, old_rssi);
                 old_rssi = rssi;
@@ -117,13 +118,23 @@ void task_stream_title(void *parameter)
     for (;;)
     {
         if (!updating)
-        {
-            updating = true;
-            set_epaper_station(*((String *)parameter));
+        {     
+            updating = true;           
+
+            if (station_text != old_stream_name)
+            {
+                //llog_d("Task Redraw station: %s, prev_station: %s", station_text.c_str(), old_stream_name.c_str());
+                old_stream_name = station_text;
+                epaper_redraw_station(station_text, true);
+            }      
+            else if (station_text != "")
+            {
+                epaper_redraw_station(station_text, false);
+            }   
+               
             updating = false;
-            break;
         }
-        vTaskDelay(portTICK_PERIOD_MS);
+        vTaskDelay(portTICK_PERIOD_MS * 500);
     }
     vTaskDelete(NULL);
 }

@@ -28,13 +28,16 @@
 
 #define rssi_x 245
 #define rssi_y 10
-#define battery_x 175
+#define battery_x 177
 #define battery_y 13
 #define time_x 175
 #define time_y 55
 
 extern Settings settings;
 struct DateTimeInfo dtInfo;
+int stream_title_xpos;
+int stream_title_width;
+bool slide_stream_title;
 
 //2.7″ E-Paper module 264*176 Pixels
 GxEPD2_BW<GxEPD2_270, GxEPD2_270::HEIGHT> display(GxEPD2_270(EPAPER_CS, EPAPER_DC, EPAPER_RST, EPAPER_BUSY));
@@ -191,23 +194,65 @@ void set_epaper_meteo(String temperature, char icon)
     display.powerOff();
 }
 
-void subrutine_station(String station)
+void epaper_draw_station(int x, int y, String station)
 {
+    llog_e("Draw station (x %d, y %d): %s", x, y, station.c_str());
+
+    display.setTextWrap(false);
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeSansBold9pt7b);
-    display.setCursor(0, 140);
+    display.setCursor(x, y);
     display.print(station);
 }
 
-void set_epaper_station(String station)
+void epaper_redraw_station(String station, bool _resetPosition)
 {
+    String _sttream_title = String(station);
+    //llog_e("ReDraw station: %s", station.c_str());
+
+    if (_resetPosition)
+    {
+        stream_title_xpos = 0;
+        slide_stream_title = false;
+
+        int16_t  x1, y1; //the bounds of x,y and w and h of the variable 'text' in pixels.
+        uint16_t w, h;
+        display.setTextWrap(false);
+        display.setFont(&FreeSansBold9pt7b);
+        display.setTextWrap(false);
+        display.getTextBounds(station, 0, 50, &x1, &y1, &w, &h);
+        stream_title_width = w;
+        if (w > SCREEN_WIDTH)
+        {
+            slide_stream_title = true;
+        }
+    }    
+
+    if (slide_stream_title)
+    {
+        _sttream_title = station + ".     " + station;
+    }
+    else if (!_resetPosition)
+    {
+        return; //draw only once
+    }
+
     display.setPartialWindow(0, 128, display.width(), display.height() - 125);
     do
     {
         display.fillScreen(GxEPD_WHITE);
-        subrutine_station(station);
+        epaper_draw_station(-stream_title_xpos, 140, _sttream_title);
     } while (display.nextPage());
     display.powerOff();
+
+    if (slide_stream_title)
+    {
+        stream_title_xpos += 5;
+        if (stream_title_xpos > stream_title_width + 28)
+        {
+            stream_title_xpos = 0;
+        }
+    }
 }
 
 void epaper_draw_rssi(int x, int y, int rssi) {
@@ -260,7 +305,7 @@ void epaper_draw_battery(int x, int y, uint8_t percentage) {
     display.fillRect(x + 34 + shift_right, y - 10, 2, 5, GxEPD_BLACK);
     display.fillRect(x + 17 + shift_right, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
 
-    u8g2Fonts.setCursor(x + 40 + shift_right, y-3);
+    u8g2Fonts.setCursor(x + 38 + shift_right, y-3);
     u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
     u8g2Fonts.print(String(percentage) + "%");
   
@@ -395,7 +440,7 @@ void logo_screen(String message)
         u8g2Fonts.setFont(u8g2_font_helvB08_tf);   
         u8g2Fonts.print(dtInfo.date);
 
-        epaper_draw_battery(battery_x + 20, battery_y, get_battery_capacity());
+        epaper_draw_battery(battery_x + 23, battery_y, get_battery_capacity());
 
         display.setCursor(x, y);
         display.print("iArradio");

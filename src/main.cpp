@@ -75,6 +75,7 @@ void setup()
     Serial.begin(115200);
     llog_d("");
     init_display();
+    print_pt();
     init_wifi();
     UpdateLocalTime();
     main_interface();
@@ -88,6 +89,7 @@ void setup()
     xTaskCreate(task_epaper_rssi, "TaskEpaperRSSI", 2500, NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(task_time, "TaskTime", 3500, NULL, tskIDLE_PRIORITY, NULL);
     //xTaskCreate(task_weather, "TaskWEATHER", 35000, NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(task_stream_title, "TaskEpaperStation", 2500, NULL, tskIDLE_PRIORITY, NULL);
 
     handle_home();
 }
@@ -97,6 +99,7 @@ void loop()
     audio_rutine();
     buttons_rutine();
     wifi_rutine();
+    vTaskDelay(portTICK_PERIOD_MS * 10);
 }
 
 

@@ -12,7 +12,7 @@ const char * pathToFileName(const char * path);
 int log_printf(const char *fmt, ...);
 void log_print_buf(const uint8_t *b, size_t len);
 
-#define LOCAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "%.03f [" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (float)(esp_timer_get_time() / 1000ULL), pathToFileName(__FILE__), __LINE__, __FUNCTION__
+#define LOCAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "%.03f [" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (float)(esp_timer_get_time() / 1000.00f), pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
 #if LOCAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 #ifndef USE_ESP_IDF_LOG
