@@ -50,7 +50,10 @@ void epaper_redraw_rssi(int rssi);
 void epaper_draw_time(int x, int y);
 void epaper_redraw_time();
 
-void epaper_draw_station(int x, int y, String station);
-void epaper_redraw_station(String station, bool _resetPosition);
+void epaper_draw_station_title(int x, int y, String station);
+void epaper_redraw_station_title(String station);
+
+void epaper_draw_stream_title(int x, int y, String station);
+void epaper_redraw_stream_title(String station, bool _resetPosition);
 
 #endif

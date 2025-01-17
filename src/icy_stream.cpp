@@ -4,7 +4,8 @@
 #include "tasks.hpp"
 
 Audio audio;
-String station_text;
+String stream_title;
+String station_title;
 uint8_t volume = 10;
 uint16_t station_index = 0;
 //char streamTitle[512] = {};
@@ -57,11 +58,11 @@ void change_station(int8_t direction)
     if (WiFi.status() == WL_CONNECTED)
     {
         audio.connecttohost(stations[station_index].url.c_str());
-        station_text = String(LISTENING + ": " + stations[station_index].name);        
+        station_title = String(LISTENING + ": " + stations[station_index].name);        
     }
     else
     {
-        station_text = String("No WiFi : " + stations[station_index].name); 
+        station_title = String("No WiFi : " + stations[station_index].name); 
     }
 
     //xTaskCreate(task_stream_title, "TaskEpaperStation", 5000, NULL, 1, NULL);
@@ -223,7 +224,7 @@ void audio_showstation(const char* info) {
 void audio_showstreamtitle(const char* info) {
     //strcpy(streamTitle, info);
     //if(!_f_irNumberSeen) _f_newStreamTitle = true;
-    station_text = String(info);
+    stream_title = String(info);
     llog_d("StreamTitle: %s", info);
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

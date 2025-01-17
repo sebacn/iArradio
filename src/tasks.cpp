@@ -1,16 +1,24 @@
 #include "tasks.hpp"
 #include "fmt.hpp"
 
+String time_str;
 volatile bool updating = false;
 uint8_t old_capacity = 0;
 int old_rssi = 0;
-String old_stream_name = "";
+String old_stream_title = "";
+String old_station_title = "";
+
 extern Settings settings;
-extern String station_text;
-String time_str;
+extern String stream_title;
+extern String station_title;
+extern bool power_off_on;
 
 void set_updating(bool value)
 {
+    while (updating && value) //wait updating completed
+    {
+        vTaskDelay(portTICK_PERIOD_MS * 100);
+    }
     updating = value;
 }
 
@@ -18,6 +26,11 @@ void task_time(void *parameter)
 {
     for (;;)
     {        
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {
             updating = true;
@@ -36,6 +49,11 @@ void task_weather(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (WiFi.status() == WL_CONNECTED)
         {
             if (!updating)
@@ -56,6 +74,11 @@ void task_epaper_battery(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {
             updating = true;
@@ -95,6 +118,11 @@ void task_epaper_rssi(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {
             updating = true;
@@ -117,20 +145,31 @@ void task_stream_title(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {     
             updating = true;           
 
-            if (station_text != old_stream_name)
+            if (stream_title != old_stream_title)
             {
                 //llog_d("Task Redraw station: %s, prev_station: %s", station_text.c_str(), old_stream_name.c_str());
-                old_stream_name = station_text;
-                epaper_redraw_station(station_text, true);
+                old_stream_title = stream_title;
+                epaper_redraw_stream_title(stream_title, true);
             }      
-            else if (station_text != "")
+            else if (stream_title != "")
             {
-                epaper_redraw_station(station_text, false);
+                epaper_redraw_stream_title(stream_title, false);
             }   
+
+            if (station_title != old_station_title)
+            {
+                old_station_title = station_title;
+                epaper_redraw_station_title(station_title);
+            }  
                
             updating = false;
         }
@@ -143,6 +182,11 @@ void task_epaper_station_number(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {
             updating = true;
@@ -165,6 +209,11 @@ void task_epaper_volume(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {
             updating = true;
@@ -187,6 +236,11 @@ void task_epaper_cursor(void *parameter)
 {
     for (;;)
     {
+        if (power_off_on)
+        {
+            break;
+        }
+
         if (!updating)
         {
             updating = true;

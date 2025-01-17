@@ -3,9 +3,13 @@
 #include "driver/rtc_io.h"
 #include "locallog.hpp"
 
+bool power_off_on;
+
 void power_off()
 {
     llog_d("Power off");
+    power_off_on = true;
+
     set_updating(true);
     audio_stop();
     logo_screen(POWEROFF);
@@ -19,6 +23,8 @@ void power_off()
 void low_battery()
 {
     llog_d("Low battery");
+    power_off_on = true;
+    
     set_updating(true);
     audio_stop();
     logo_screen(LOWBATT);

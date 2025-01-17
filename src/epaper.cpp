@@ -1,5 +1,5 @@
 #include "epaper.hpp"
-#include <WiFi.h>
+//#include <WiFi.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h>
@@ -15,6 +15,8 @@
 #include "battery.hpp"
 #include "lang.hpp"
 #include "locallog.hpp"
+//#include "img_64bw.hpp"
+#include "img_90bw.hpp"
 
 #define SPEAKER_ICON "0"
 #define SELECTED_ICON "1"
@@ -194,20 +196,20 @@ void set_epaper_meteo(String temperature, char icon)
     display.powerOff();
 }
 
-void epaper_draw_station(int x, int y, String station)
+void epaper_draw_stream_title(int x, int y, String stream_title)
 {
-    llog_e("Draw station (x %d, y %d): %s", x, y, station.c_str());
+    llog_e("Draw stream_title (x %d, y %d): %s", x, y, stream_title.c_str());
 
     display.setTextWrap(false);
     display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeSansBold9pt7b);
     display.setCursor(x, y);
-    display.print(station);
+    display.print(stream_title);
 }
 
-void epaper_redraw_station(String station, bool _resetPosition)
+void epaper_redraw_stream_title(String stream_title, bool _resetPosition)
 {
-    String _sttream_title = String(station);
+    String _sttream_title = String(stream_title);
     //llog_e("ReDraw station: %s", station.c_str());
 
     if (_resetPosition)
@@ -220,7 +222,7 @@ void epaper_redraw_station(String station, bool _resetPosition)
         display.setTextWrap(false);
         display.setFont(&FreeSansBold9pt7b);
         display.setTextWrap(false);
-        display.getTextBounds(station, 0, 50, &x1, &y1, &w, &h);
+        display.getTextBounds(stream_title, 0, 50, &x1, &y1, &w, &h);
         stream_title_width = w;
         if (w > SCREEN_WIDTH)
         {
@@ -230,18 +232,18 @@ void epaper_redraw_station(String station, bool _resetPosition)
 
     if (slide_stream_title)
     {
-        _sttream_title = station + ".     " + station;
+        _sttream_title = stream_title + ".     " + stream_title;
     }
     else if (!_resetPosition)
     {
         return; //draw only once
     }
 
-    display.setPartialWindow(0, 128, display.width(), display.height() - 125);
+    display.setPartialWindow(0, 163, display.width(), display.height() - 160);
     do
     {
         display.fillScreen(GxEPD_WHITE);
-        epaper_draw_station(-stream_title_xpos, 140, _sttream_title);
+        epaper_draw_stream_title(-stream_title_xpos, 175, _sttream_title);
     } while (display.nextPage());
     display.powerOff();
 
@@ -253,6 +255,29 @@ void epaper_redraw_station(String station, bool _resetPosition)
             stream_title_xpos = 0;
         }
     }
+}
+
+
+void epaper_draw_station_title(int x, int y, String station)
+{
+    llog_e("Draw station (x %d, y %d): %s", x, y, station.c_str());
+
+    display.setTextWrap(false);
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&FreeSansBold9pt7b);
+    display.setCursor(x, y);
+    display.print(station);
+}
+
+void epaper_redraw_station_title(String station)
+{
+    display.setPartialWindow(0, 140, display.width(), 15);
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        epaper_draw_station_title(0, 155, station);
+    } while (display.nextPage());
+    display.powerOff();
 }
 
 void epaper_draw_rssi(int x, int y, int rssi) {
@@ -462,7 +487,7 @@ void main_interface()
     {
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
-        display.drawFastHLine(0, 124, 264, GxEPD_BLACK);
+        //display.drawFastHLine(0, 124, 264, GxEPD_BLACK);
         display.drawFastHLine(0, 13, 264, GxEPD_BLACK);
 
         u8g2Fonts.setCursor(0, 12);
@@ -481,6 +506,14 @@ void main_interface()
         display.setCursor(time_x, time_y + 20);
         display.print(dtInfo.weekDay);
 
+
+        //display.drawGrayscaleBitmap();
+        //display.drawImage(img_90bw_data, 0, 15, 90, 90, false, true, true);
+        display.drawBitmap(5, 20, epd_bitmap_90bw, 90, 90, GxEPD_BLACK);
+        //display.drawInvertedBitmap (5, 20, epd_bitmap_90bw, 90, 90, GxEPD_BLACK);
+
+        
+
         //set_epaper_wifi_signal(245, 10, -60, true);
 
         //display.drawFastVLine(108, 0, 85, GxEPD_BLACK);
@@ -489,4 +522,6 @@ void main_interface()
     } while (display.nextPage());
 
     display.powerOff();
+
+    delay(2000);
 }
