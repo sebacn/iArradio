@@ -27,7 +27,7 @@ if args.bpp != 1 and args.bpp != 2 and args.bpp != 4 and args.bpp != 8:
 im = Image.open(args.inputfile)
 # convert to grayscale
 im = im.convert(mode='L')
-#im.thumbnail((SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.LANCZOS)
+#im.thumbnail((115, 115), Image.Resampling.LANCZOS) #SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.LANCZOS)
 arrsize = 0;
 
 # Write out the output file.
@@ -41,14 +41,19 @@ with open(args.outputfile, 'w') as f:
     f.write(
         "const uint8_t {}[] PROGMEM = {{\n\t".format(args.name, math.ceil(im.size[0] / 2) * 2, im.size[1], math.ceil(8/args.bpp))
     )
+
+    #byte = 0
+    #done = True
+    #idx = math.ceil(8/args.bpp)
+    
     for y in range(0, im.size[1]):
         byte = 0
-        #done = True
+        done = True
         idx = math.ceil(8/args.bpp)
         for x in range(0, im.size[0]):
             l = im.getpixel((x, y))
             #print("0x{:02X}, ".format(l))
-            #f.write("x{:d},y{:d},px{:02X}, ".format(x,y,l))
+            #f.write("({:d},{:d},px{:02X}), ".format(x,y,l))
             '''
 bitpp   bytes   depth(greys)
 8       1       256
@@ -56,15 +61,18 @@ bitpp   bytes   depth(greys)
 2       4       4
 1       8       1 b/w
             '''
+            done = False
             idx -= 1
             pbyte = l >> (8-args.bpp) # l/16
             #f.write("x{:d},y{:d},px{:02X},pb{:02X}, ".format(x,y,l,pbyte))
             byte |= pbyte << (idx)*args.bpp
             if idx == 0: #(8/args.bpp):
+                #f.write("({:d})_".format(idx))
                 f.write("0x{:02X}, ".format(byte))
                 arrsize +=1;
                 byte = 0
                 idx = math.ceil(8/args.bpp)
+                done = True
             '''
             if x % 2 == 0:
                 byte = l >> 4
@@ -74,9 +82,11 @@ bitpp   bytes   depth(greys)
                 f.write("0x{:02X}, ".format(byte))
                 done = True
             '''
-        #if idx != 0:
-        #    f.write("0x{:02X}, ".format(byte))
-        #    arrsize +=1;
+        if done == False:
+            #f.write("({:d})_".format(idx))
+            f.write("0x{:02X}, ".format(byte))
+            idx=0;
+            arrsize +=1;
         f.write("\n\t");
     f.write("};\n\n")
     f.write("//array size {}\n\n".format(arrsize))
