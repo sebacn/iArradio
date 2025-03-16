@@ -7,6 +7,7 @@ uint8_t old_capacity = 0;
 int old_rssi = 0;
 String old_stream_title = "";
 String old_station_title = "";
+bool old_volume_mode;
 
 extern Settings settings;
 extern String stream_title;
@@ -169,7 +170,7 @@ void task_stream_title(void *parameter)
             {
                 old_station_title = station_title;
                 epaper_redraw_station_title(station_title);
-            }  
+            }
                
             updating = false;
         }
@@ -178,6 +179,7 @@ void task_stream_title(void *parameter)
     vTaskDelete(NULL);
 }
 
+/*
 void task_epaper_station_number(void *parameter)
 {
     for (;;)
@@ -198,6 +200,7 @@ void task_epaper_station_number(void *parameter)
     }
     vTaskDelete(NULL);
 }
+*/
 
 void task_eeprom_station(void *parameter)
 {
@@ -232,6 +235,7 @@ void task_eeprom_volume(void *parameter)
     vTaskDelete(NULL);
 }
 
+/*
 void task_epaper_cursor(void *parameter)
 {
     for (;;)
@@ -252,3 +256,4 @@ void task_epaper_cursor(void *parameter)
     }
     vTaskDelete(NULL);
 }
+*/

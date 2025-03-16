@@ -12,3 +12,6 @@ void handle_prev_button();
 void handle_next_button();
 void handle_home_timeout();
 void handle_home();
+void handle_ok_button();
+void handle_vol_inc_button();
+void handle_vol_dec_button();

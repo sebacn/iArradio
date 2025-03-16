@@ -55,19 +55,26 @@ void change_station(int8_t direction)
     }
     audio.stopSong();
 
+    station_title = String(station_index) + ": " + stations[station_index].name; 
+    stream_title = ""; 
+
     if (WiFi.status() == WL_CONNECTED)
-    {
-        audio.connecttohost(stations[station_index].url.c_str());
-        station_title = String(LISTENING + ": " + stations[station_index].name);        
+    {         
+        if (!audio.connecttohost(stations[station_index].url.c_str()))
+        {  
+            stream_title = "Error: Failed connect";   
+        }
     }
     else
     {
-        station_title = String("No WiFi : " + stations[station_index].name); 
+        stream_title = "Error: No WiFi";
     }
 
     //xTaskCreate(task_stream_title, "TaskEpaperStation", 5000, NULL, 1, NULL);
-    xTaskCreate(task_epaper_station_number, "TaskEpaperStationNumber", 5000, &station_index, 1, NULL);
-    xTaskCreate(task_eeprom_station, "TaskEEPROMStation", 5000, &station_index, 1, NULL);   
+    //xTaskCreate(task_epaper_station_number, "TaskEpaperStationNumber", 5000, &station_index, 1, NULL);
+    xTaskCreate(task_eeprom_station, "TaskEEPROMStation", 5000, &station_index, 1, NULL);  
+
+    llog_d("Change station %d", station_index); 
 }
 
 void set_station(int8_t index)
@@ -77,6 +84,8 @@ void set_station(int8_t index)
         station_index = 0;
     }
     station_index = index;
+
+    llog_d("Set station %d", station_index);
 }
 
 /*
@@ -98,6 +107,8 @@ void increase_volume(int8_t amount)
     audio.setVolume(volume);
     xTaskCreate(task_epaper_volume, "TaskEpaperVolume", 5000, &volume, 1, NULL);
     xTaskCreate(task_eeprom_volume, "TaskEEPROMVolume", 5000, &volume, 1, NULL);
+
+    llog_d("Inc volume %d", volume);
 }
 
 void set_volume(int8_t value)
@@ -108,6 +119,8 @@ void set_volume(int8_t value)
         value = 0;
     volume = value;
     increase_volume(0);
+
+    llog_d("Set volume %d", volume);
 }
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

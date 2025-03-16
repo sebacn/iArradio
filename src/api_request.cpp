@@ -39,8 +39,11 @@ void update_datetime(TimeZoneDbResponse& datetime_resp, JsonObject& jobj) {
     datetime_resp.formatted = jobj["formatted"].as<String>();
 
     struct timeval tv;
+    tv.tv_usec = 0;
     tv.tv_sec = datetime_request.response.dt;
     settimeofday(&tv, NULL);
+    setenv("TZ", "UTC0", 1); // https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
+    tzset();
 
     llog_d("DtaTime updated (update_datetime)");
 }

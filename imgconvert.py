@@ -27,7 +27,7 @@ if args.bpp != 1 and args.bpp != 2 and args.bpp != 4 and args.bpp != 8:
 im = Image.open(args.inputfile)
 # convert to grayscale
 im = im.convert(mode='L')
-#im.thumbnail((115, 115), Image.Resampling.LANCZOS) #SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.LANCZOS)
+im.thumbnail((150, 150), Image.Resampling.LANCZOS) #SCREEN_WIDTH, SCREEN_HEIGHT), Image.Resampling.LANCZOS)
 arrsize = 0;
 
 # Write out the output file.

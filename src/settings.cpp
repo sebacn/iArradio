@@ -60,7 +60,8 @@ void print_pt()
   llog_i("Flash chip size: %d", free_size);
   llog_i("Psram size: %d", psram_size);
   llog_i("Stack size: %d", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-  llog_i("uxTaskGetStackHighWaterMark: %d\n\n", uxTaskGetStackHighWaterMark(NULL)); 
+  llog_i("uxTaskGetStackHighWaterMark: %d\n", uxTaskGetStackHighWaterMark(NULL)); 
+  wakeup_reason();
 }
 
 String print_reset_reason(RESET_REASON reason) {

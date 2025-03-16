@@ -13,6 +13,9 @@
 //#include "lang.hpp"
 #include "api_request.hpp"
 #include "locallog.hpp"
+//#include "FS.h"
+//#include "SD.h"
+//#include "SPI.h"
 
 extern Settings settings;
 
@@ -74,8 +77,8 @@ void setup()
 {
     Serial.begin(115200);
     llog_d("");
-    init_display();
     print_pt();
+    init_display();
     init_wifi();
     UpdateLocalTime();
     main_interface();

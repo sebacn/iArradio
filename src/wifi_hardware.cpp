@@ -13,6 +13,7 @@ WiFiManagerParameter *pparmUnits;
 
 bool configSaved;
 extern Settings settings;
+//extern GxEPD2_4G_4G<GxEPD2_270, GxEPD2_270::HEIGHT> display;
 boolean UpdateLocalTime();
 
 uint8_t StartWiFi() {
@@ -71,7 +72,6 @@ void init_wifi()
 {    
     llog_d("WiFi Init");
     read_config_from_memory();
-    wakeup_reason();
 
     wifiManager.setDebugOutput(true);
     wifiManager.setAPCallback(configModeCallback);
@@ -92,7 +92,7 @@ void init_wifi()
     wifiManager.addParameter(pparmTimezdbKey);
     wifiManager.addParameter(pparmUnits);
 
-    logo_screen("Connecting to WiFi: " + String(WIFI_AP_NAME));
+    logo_screen("Connecting to WiFi: " + settings.WiFiSSID);
     llog_i("Connecting to WiFi: %s", settings.WiFiSSID.c_str());
 
     if (settings.ConfigOk)
@@ -250,7 +250,7 @@ void wifi_rutine()
             if (!validate_settings())
             {
                 llog_d("Settings validation failed");
-                logo_screen("Settings validation failed..\nTo configure settings connect to " + String(WIFI_AP_NAME) + " PASS:" + WIFI_AP_PASS);
+                logo_screen("Settings validation failed..\nTo configure settings connect to " + settings.WiFiSSID + " PASS:" + WIFI_AP_PASS);
                 wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASS);
             }
         }
